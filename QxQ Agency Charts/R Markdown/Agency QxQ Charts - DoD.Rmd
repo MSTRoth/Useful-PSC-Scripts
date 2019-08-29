@@ -1,0 +1,145 @@
+---
+title: 'Creating PSC Market Briefing Charts: Agency Charts - QxQ - DoD'
+author: "Marielle Roth"
+date: "August 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Quarter by Quarter Agency Charts
+### DoD
+
+This script will produce the quarter by quarter stacked bar chart for DoD.  DoD required a different script since the file is too large for BGOV to download.  This chart is essentially the same as the government-wide quarter by quarter defense chart, but in the color theme of the agency quarter by quarter charts.
+
+Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:\1 Marielle Folder\Data Sets\Government-Wide Data\csv\To Build**
+
+To update the dataset, use the BGov Contracts Intelligence Tool (CIT).  
+
++ Click **+ More Fields**
++ Select **Transaction Signed Date**, then click **UPDATE**
++ Scroll down to where it says **Transaction Signed Date** to specify for which quarter you want numbers (assume FY19):
+    + Q1: From = 10/01/2018; To = 12/31/2018 (note the fiscal year is year-1)
+    + Q2: From = 01/01/2019; To = 03/31/2019
+    + Q3: From = 04/01/2019; To = 06/30/2019
+    + Q4: From = 07/01/2019; To = 09/30/2019
++ Copy and paste the DoD value into excel as **Defense**
++ Save the Excel document
+
+Note: Since DoD is 3 months behind, the DoD number will be available and stable around 3 months and 15 days after the desired quarter.
+
+The code is located in the R File **Agency QxQ Chart - DoD** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\QxQ Agency Charts**
+
+First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
+
+```{r, eval=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+options(scipen=999)
+
+setwd("X:/1 Marielle Folder/Visualizations/Agency Charts/QbyQ charts") 
+
+data <- read_csv("x:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build/Civilian and Defense Data by quarter.csv")
+```
+
+Then define the name of the Agency and Year in quotes:
+```{r, eval=FALSE}
+Agency <- "DoD"
+Year <- "FY17-19Q2"
+data$Year = as.character(data$Year)
+```
+
+Note: the **Year** refers to the year range that you want in the chart and displayed in the title of the chart. If you only wanted to show FY18 to FY19Q2 you would instead have:
+
+```{r, eval=FALSE}
+Agency <- "DoD"
+Year <- "FY18-19Q2"
+data$Year = as.character(data$Year)
+```
+
+Then organize and process the data to prepare it for the plot. Run the following:
+
+```{r, eval=FALSE}
+data.civdef_def <- data %>%
+  rename(civ_def = "Civ/Def",
+         total_obligations = "Contract Obligations (in Billions)") %>%
+  filter(civ_def == "Defense") %>%             
+  #filter(Year!=2019) %>%
+  group_by(Year, civ_def) %>%
+  mutate(label_y = cumsum(total_obligations))
+
+data.civdef_def$Year = as.character(data.civdef_def$Year)
+
+data.def <- data %>%
+  rename(civ_def = "Civ/Def",
+         total_obligations = "Contract Obligations (in Billions)") %>%
+  #filter(Year!=2019) %>%
+  filter(civ_def == "Defense") %>%              
+  group_by(Year, civ_def) %>%
+  mutate(label_y = cumsum(total_obligations),
+         prop = 100*total_obligations/sum(total_obligations)) %>%
+  filter(Year %in% c(2017:2019)) %>%
+  mutate(FYYear = paste("FY",Year, sep = ""))
+
+```
+Note: Identify which years you want displayed and fill in the date range, without quarters, in the chart in the line
+
+    filter(`Fiscal Year` %in% c(2017:2019)) %>%  
+
+The above will have 2016, 2017, 2018 and 2019.  When you want to display other years, say 2017 through 2020, fill in the **Year ==** as follows:
+
+    filter(Year == **2017:2020**) %>%
+
+If you have just pulled Q4 Defense data (the first fiscal quarter has just ended), note that the chart will only have data from the previous year, not the current year, so make sure the second to last line refects that.
+
+
+Next, create the barplot. Run the following:
+```{r, eval=FALSE}
+
+plotdef <- ggplot(data.def, aes(x = FYYear, y = total_obligations, fill = factor(Quarter, levels = c("Q4","Q3", "Q2","Q1")))) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(aes(label = round(total_obligations, digits = 2), y = label_y), size = 4, vjust = 1.5, fontface = "bold")+
+  geom_text(data = subset(data.def, Year != 2019), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
+  stat_summary(fun.y = sum, aes(label = ..y.., group = Year),
+               geom = "text", vjust = -.5, size = 4, fontface = "bold")+   
+  scale_fill_manual(name = "Quarter", values = brewer.pal(9, "GnBu")[c(1,3,5,7)])+
+  labs(y = "Contract Obligations (in) Billions",                                            ##Change based on $$ division
+       title = paste(Agency, " Contract Obligations Comparison - ", Year, sep = ""),                   
+       caption = "Data Source: Bloomberg Government") +                                                        
+  theme(plot.title = element_text(hjust = 0.5, vjust = 3, size = 24, face = "bold"), 
+        plot.subtitle = element_text(hjust = 0.5, size = 18, face = "bold"),
+        plot.caption = element_text(size = 8, face = "italic"),
+        axis.ticks.x = element_blank(),
+        strip.text = element_text(face = "bold", size = 20), 
+        axis.title.x = element_blank(),
+        panel.spacing = unit(4, "lines"))
+
+
+plotdef
+```
+
+Two fields may need to be changed in the above.  
+
+1. Whichever year has any incomplete year displayed, plug that into the following line, replacing the 2019 (if a year other than 2019):  
+
+    , Year != 2019
+If all years are complete, put a # before this line so that it reads
+
+    #, Year != 2019
+    
+2. If you changed the dollar division in the last step, change **Billions** to **Millions** or **Thousands** in the line that reads 
+
+    labs(y = "Contract Obligations (in) Billions",
+
+
+
+The plot should appear in the window at the bottom right.  If it doesn't, make sure you ran all the lines above and that there are no typos in your changes.  to see it larger, push the **Zoom** button.
+
+If the plot needs to be changed after viewing, make the necessary changes and rerun the script.  If satisfied with the plot, save it as a JPG ih the directory you specified above. To do so, run the following: 
+
+```{r, eval=FALSE}
+ggsave(filename = paste(Agency," Contract Obligations ", Year, "by quarter.jpg", sep = ""), plotdef,
+       width = 13, height = 6.5, units = "in")
+```

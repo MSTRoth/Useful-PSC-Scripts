@@ -1,0 +1,133 @@
+---
+title: 'Creating PSC Market Briefing Charts: Government-Wide Charts - QxQ
+  Civ/Def'
+author: "Marielle Roth"
+date: "August 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Quarter comparisons for Contract Obligations - Civilian/Defense Breakout
+
+#### Civilian and Defense on Single Slide
+
+Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:\1 Marielle Folder\Data Sets\Government-Wide Data\csv\To Build**
+
+To update the dataset, use the BGov Contracts Intelligence Tool (CIT).  
+
++ Click **+ More Fields**
++ Select **Transaction Signed Date**, then click **UPDATE**
++ Scroll down to where it says **Transaction Signed Date** to specify for which quarter you want values (assume FY19):
+    + Q1: From = 10/01/2018; To = 12/31/2018 (note the fiscal year is year-1)
+    + Q2: From = 01/01/2019; To = 03/31/2019
+    + Q3: From = 04/01/2019; To = 06/30/2019
+    + Q4: From = 07/01/2019; To = 09/30/2019
++ Copy and paste the DoD value into excel as **Defense**
++ Subtract the DoD value from the total value to get the Civilian Transaction Value
++ Save the Excel document
+
+Note: Do this once the data is stable, usually around 15 days after the end of the quarter, to obtain the values for the needed quarter for **Contract Obligations (in Billions)** column.  You may have to do this a few times following the end of the quarter to makes sure the numbers have all come in and are relatively stable.  The Civilian (Non-DoD) value should be available, and stable, around 15 days after the end of the desired quarter.  Since DoD is 3 months behind, the DoD number will be available and stable around 3 months and 15 days after the desired quarter.
+
+
+The code is located in the R File **Government-Wide QxQ Chart - Both** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\Government-Wide Charts**
+
+First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
+
+```{r, eval=FALSE}
+library(colorspace)
+library(RColorBrewer)
+library(tidyverse)
+options(scipen=999)
+
+setwd("x:/1 Marielle Folder/Visualizations/Government-Wide")
+
+data <- read_csv("x:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build/Civilian and Defense Data by quarter.csv")
+
+data$Year = as.character(data$Year)
+```
+
+Then organize and process the data to prepare it for the plot. Run the following:
+
+```{r, eval=FALSE}
+data.civdef_total <- data %>%
+  rename(civ_def = "Civ/Def",
+         total_obligations = "Contract Obligations (in Billions)") %>%
+  group_by(Year, civ_def) %>%
+  mutate(label_y = cumsum(total_obligations))
+
+data.civdef_total$Year = as.character(data.civdef_total$Year)
+
+data.civdef <- data %>%
+  rename(civ_def = "Civ/Def",
+         total_obligations = "Contract Obligations (in Billions)") %>%
+  group_by(Year, civ_def) %>%
+  mutate(label_y = cumsum(total_obligations),
+         prop = 100*total_obligations/sum(total_obligations)) %>%
+  filter(Year == 2016:2018 | (Year == 2019 #& `civ_def`== "Civilian" 
+                                                       )) %>%
+  mutate(FYYear = paste("FY",Year, sep = ""))
+
+```
+If you have just pulled Q1 Civilian data and Q4 Defense data (the first fiscal quarter has just ended), remove the # from before **& `civ_def`== "Civilian"** in the second to last line so that only the civilian chart displayes that year.  Otherwise there will be a gap on the chart.  In any other quarter, leave the # in place.  
+
+Additionally, identify which years you want displayed.  The above will have 2016, 2017, 2018 and 2019.  When you want to display other years, say 2017 through 2020, fill in the **Year ==** as follows:
+
+
+    filter(Year == **2017:2019** | (Year == **2020** #& `civ_def`== "Civilian" 
+                                                              )) %>%
+
+Then, run the following after changing **Defense - Q2** and **Civilian - Q3** to reflect the most recent quarters                                                         
+```{r, eval=FALSE}
+data.civdef$civ_def <- c("Defense - Q2", "Civilian - Q3")  ### Change based on quarter
+
+```
+
+To create the chart, run the following:
+
+```{r, eval=FALSE}
+plotyr <- ggplot(data.civdef, aes(x = FYYear, y = total_obligations, fill = factor(Quarter, levels = c("Q4","Q3", "Q2","Q1")))) +
+  geom_bar(stat = "identity", color = "black") +
+ geom_text(aes(label = round(total_obligations, digits = 1), y = label_y), size = 4, vjust = 1.5, fontface = "bold")+
+ geom_text(data = subset(data.civdef, Year != 2019), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
+  stat_summary(fun.y = sum, aes(label = ..y.., group = Year),
+               geom = "text", vjust = -.5, size = 5, fontface = "bold")+  
+scale_fill_manual(name = "Quarter", values = brewer.pal(9, "YlOrRd")[c(1,3,5,7)])+
+ facet_grid(~civ_def, labeller = label_wrap_gen(20), scales = "free")+
+  labs(x="Fiscal Year", y = "Contract Obligations (in Billions)", 
+title = "Contract Obligations Comparison FY16-FY19",
+        subtitle = NULL
+        , caption = "Data Source: Bloomberg Government"
+        ) +                                                                           
+  theme(plot.title = element_text(hjust = 0.5, vjust = 3, size = 24, face = "bold"), plot.subtitle = element_text(hjust = 0.5, size = 18, face = "bold"),
+        plot.caption = element_text(size = 9, face = "italic"),
+        axis.ticks.x = element_blank(),
+        strip.text = element_text(face = "bold", size = 20), 
+        axis.title.x = element_blank(),
+        panel.spacing = unit(4, "lines"))
+
+plotyr
+```
+Two fields may need to be changed in the above.  
+
+1. Whichever year has any incomplete year displayed (not all quarters for Def and Civ), plug that into the following line, replacing the 2019 (if a year other than 2019):  
+
+    geom_text(data = subset(data.civdef, Year != 2019), aes(label = sprintf('%.0f%%', prop), y =                      label_y), size = 4, vjust = 3, fontface = "bold")+ 
+    
+2. In the line where it says 
+    
+    title = "Contract Obligations Comparison FY16-FY19",
+change to reflect the correct years
+
+
+The plot should appear in the window at the bottom right.  If it doesn't, make sure you ran all the lines above and that there are no typos in your changes.  to see it larger, push the **Zoom** button.
+
+If the plot needs to be changed after viewing, make the necessary changes and rerun the script.  If satisfied with the plot, save it as a JPG ih the directory you specified above. To do so, run the following: 
+
+```{r, eval=FALSE}
+ggsave("Contract Obligations by Quarter- FY16-FY19Q3.jpg", plotyr,                  ###Change name 
+       width = 15, height = 7, units = "in")
+```
+Don't forget to change the name in the above to the correct year range.  DON'T save the script when done.

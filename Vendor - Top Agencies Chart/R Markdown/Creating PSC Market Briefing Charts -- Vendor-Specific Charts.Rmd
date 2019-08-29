@@ -1,0 +1,131 @@
+---
+title: 'Creating PSC Market Briefing Charts: Vendor-Specific Charts'
+author: "Marielle Roth"
+date: "August 21, 2019"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Company Profile Chart: Vendor Contract Transactions by Agency
+
+This chart is used to determine which are the top agencies from which a vendor company has won contracts, by transaction value, over a specified span of time.  The needed script can be found in ***X:/1 Marielle Folder/R Scripts/Useful PSC Scripts/Agency MB charts - Vendor Specific***.
+
+Using the BGov Contracts Intelligence Tool (CIT), pull the data for the desired Vendor:
+
++ Type the vendor's name in the Vendor Name box and select the vendor (if there, choose the otion that has (+ All Subsidiaries))
++ Click Go
++ Click Download and select Download All
++ When the file finishes downloading open file, click the enable editing button, and click the tab at the bottom maked Data Sheet
++ Click Save As, save the sheet as a __CSV (Comma Delimited)__ file with the title __Vendor Company Profile.csv__, where Vendor is the Vendor name.  Save the file in the folder ___X:/1 Marielle Folder/Data Sets/Vendor Specific/___
+
+After the file is saved, open the script mentioned above in RStudio.
+
+First load the necessary packages and identify your location for saving your chart (set the working directory). Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
+
+```{r, eval=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+
+setwd("X:/1 Marielle Folder/Visualizations/Vendor Specific")
+```
+
+Then define the name of the vendor in quotes, using the exact name and formatting used to save the file. See the following examples:
+
+* If you used **Hafaker and Associates Company Profile.csv**
+```{r, eval=FALSE}
+Vendor<- "Halfaker and Associates"
+```
+* If you used **Hafaker Company Profile.csv**
+```{r, eval=FALSE}
+Vendor<- "Halfaker"
+```
+* If you used **hafaker Company Profile.csv**
+```{r, eval=FALSE}
+Vendor<- "halfaker"
+```
+
+Then define the year range you want displayed
+```{r, eval=FALSE}
+year_range <- "FY15-18"
+```
+
+Run those two line.
+
+Then read in your saved dataset. Run the following:
+```{r, eval=FALSE}
+data <- read_csv(paste("X:/1 Marielle Folder/Data Sets/Vendor Specific/", Vendor," Company Profile.csv", sep = ""))
+```
+
+To get the list of the top n agencies by obligation, run the following:
+
+```{r, eval=FALSE}
+top_n_agencies <- data %>%
+  select("Fiscal Year", "Funding Agency", "Transaction Value") %>%
+  dplyr::rename(fiscal_year = "Fiscal Year",
+                funding_agency = "Funding Agency",
+                transaction_value = "Transaction Value") %>%
+  #filter(fiscal_year != year) %>%                                        
+  group_by(funding_agency) %>%
+  dplyr::summarize(grand_total_transaction_value = sum(transaction_value)) %>%
+  arrange(desc(grand_total_transaction_value)) %>%
+  top_n(5)
+```
+
+Note: If there are any incomplete fiscal years in your dataset or years you do not want included, delete the # sign before the **filter(fiscal_year != year)** line and fill in the year where it says **year**. Replace the 5 in parentheses (see line **top_n(5)**) with the number of agencies you want displayed in the chart.  I ususally start with 5 or 6 and after viewing the initial chart I rerun the code if I want to add more or fewer agencies.
+
+Then process the data to get the total transaction value by year (Run the following):
+
+```{r, eval=FALSE}
+data.agency.year <- data %>%
+  select("Fiscal Year", "Funding Agency", "Transaction Value") %>%
+  dplyr::rename(fiscal_year = "Fiscal Year",
+                funding_agency = "Funding Agency",
+                transaction_value = "Transaction Value") %>%
+  #filter(fiscal_year != year) %>%                                      
+  filter(funding_agency %in% top_n_agencies) %>%
+  dplyr::group_by(funding_agency, fiscal_year) %>%
+  dplyr::summarize(total_transaction_value = (sum(transaction_value)/1000000))  ###$$$ division
+
+data.agency.year$fiscal_year = as.character(data.agency.year$fiscal_year)
+data.agency.year$facet = factor(data.agency.year$funding_agency, levels = c(top_n_agencies))
+
+```
+Note: Once again, if there are any incomplete fiscal years in your dataset or years you do not want included, delete the # sign before the filter(**fiscal_year != year**) line and fill in the year where it says **year**. 
+If the Vendor is working with particularly large or small contracts, the 1000000 can be changed to 1000000000 or 1000 make the plot easier to read. If you change it, keep it in mind when creating the plot below to change Millions to Billions or Thousands
+
+
+Next, create the barplot. Run the following:
+```{r, eval=FALSE}
+plot <- ggplot(data.agency.year, aes(x = fiscal_year, y = total_transaction_value, fill = fiscal_year)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = round(total_transaction_value, digits = 1), vjust = 1.5), size = 3)+
+    scale_fill_manual("Fiscal Year", values = c("2015" = "steelblue1", "2016" = "orangered",            
+                                                "2017" = "grey70", "2018" = "orange"
+                                                #, "2019" = "olivedrab3"
+                                                )) +
+    facet_grid(~facet, labeller = label_wrap_gen(20))+
+   #facet_wrap(~facet, labeller = label_wrap_gen(20), scales = "free")+                        
+    labs(x="Fiscal Year", y = "Contract Obligations (in) Millions",                             
+         title = paste(Vendor, " Contract Obligations by Agency ", year_range, sep = ""))+    
+    theme(plot.title = element_text(hjust = 0.5, size = 24, face = "bold"), 
+          axis.text.x = element_blank(), axis.ticks.x = element_blank())
+
+plot
+```
+Note: The line that starts **scale_fill_manual** assigns a color to each year.  When new years are needed, cycle the colors in the chart per year.  Thus, when **2015** is no longer useful (only 4 or 5 are necessary for this chart), replace with **"2020" = "steelblue1"** and so on.
+If you want to include **2019**, delete the #.
+If you changed the dollar division in the last step, change **Millions** to **Billions** or **Thousands** in the line that starts **labs(x="Fiscal Year")** to change the chart label.
+
+The plot should appear in the window at the bottom right.  If it doesn't, make sure you ran all the lines above and that there are no typos in your changes.  to see it larger, push the **Zoom** button.
+
+If the plot needs to be changed after viewing (the dollar division, the number of Agencies displayed, a year added or removed...) make the necessary changes and rerun the script.  If satisfied with the plot, save it as a JPG ih the directory you specified above. To do so, run the following:
+
+```{r, eval=FALSE}
+ggsave(paste(Vendor, " Contract Obligations by Agency - ", year_range, ".jpg", sep = ""), plot,               
+       width = 13, height = 6, units = "in")
+
+```

@@ -1,0 +1,104 @@
+---
+title: 'Creating PSC Market Briefing Charts: Civilian-Wide DPAP Chart'
+author: "Marielle Roth"
+date: "August 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Total Contract Spending, by DPAP and Products categories
+
+Find the file called **DPAP (services and total) Data - Government Wide.csv** in the folder **X:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build/**
+
+To update the dataset, use BGovMarkets pull down to obtain the values for the needed year for DoD, Non-DoD, and Government-Wide.  The Civilian (Non-DoD) value should be available, and stable, around October 15th.  Since DoD is 3 months behind, the DoD and Government-Wide numbers will be available and stable around January 15th.
+
+The DPAP categories are 
+
+* Construction Services
+* Electronic & Communication Services
+* Equipment Related Services
+* Facility Related Services
+* Knowledge Based Services
+* Logistics Management Services
+* Medical Services
+* Research and Development
+* Transportation Services
+
+These cover all the services.  To get **Services** add each category together.  To get **Products** subtract **Services** from the total on BGOV (you can get this by just running all years and the **Total** will be the first line of numbers; to get Civilian total, subtract DoD from the total).  
+
+The code is located in the R File **Government-Wide DPAP Chart - Civilian-Wide** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\Government-Wide Charts**
+
+First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code): 
+
+```{r, eval=FALSE}
+library(colorspace)
+library(RColorBrewer)
+library(tidyverse)
+options(scipen=999)
+
+setwd("X:/1 Marielle Folder/Visualizations/Government-Wide")
+
+data <- read_csv("X:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build/DPAP (services and total) Data - Government Wide.csv")
+
+data$`DPAP Category` <- factor(data$`DPAP Category`,
+                               levels = c("Products", "Construction Services",
+                                          "Electronic & Communication Services",
+                                          "Equipment Related Services",
+                                          "Facility Related Services",
+                                          "Knowledge Based Services",
+                                          "Logistics Management Services",
+                                          "Medical Services",
+                                          "Research and Development",
+                                          "Transportation Services"),
+                               ordered = is.ordered(data$`DPAP Category`))
+```
+
+Run the following code to process, plot and save the Civilian chart.
+
+```{r, eval=FALSE}
+##Civilian-Wide data####
+
+##Process
+
+DPAP_civ <- data %>%
+  filter(`DPAP Category` != "Total") %>% 
+  group_by(`Fiscal Year`) %>%
+  arrange(desc(`DPAP Category`)) %>%
+  #mutate(label_y = cumsum(`$ billions`))
+  mutate(pors = ifelse(`DPAP Category`=="Products","Product","Service")) %>%
+  group_by(`Fiscal Year`, pors) %>%
+  mutate(`pors$` = sum(`$_billions_Civilian`))
+
+
+label_height_civ <- DPAP_civ %>%
+  group_by(`Fiscal Year`, pors) %>%
+  summarize(`pors$` = sum(`$_billions_Civilian`)) %>%
+  group_by(`Fiscal Year`) %>%
+  arrange(desc(`pors`)) %>%
+  mutate(label_y2 = cumsum(`pors$`)) %>%
+  left_join(DPAP_civ, by = c("Fiscal Year", "pors", "pors$") )
+
+##Plot
+
+plot_civ <- ggplot(label_height_civ, aes(x = `Fiscal Year`, y = `$_billions_Civilian`,
+                                         fill = `DPAP Category`)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(x = `Fiscal Year`, label = round(`pors$`, digits = 2), y = label_y2), size = 4, vjust = 1.5, check_overlap = TRUE)+
+  geom_bar(data = subset(label_height_civ, `DPAP Category` %in% c("Medical Services", "Products")), aes(x=`Fiscal Year`, y=`pors$`), colour = "black", fill = NA, stat = "identity"
+  )+
+  scale_fill_brewer(name = "Services/Products Contract Category", palette = "Set3") +
+  labs(x="Fiscal Year", y = "Contract Obligations (in) Billions",
+       title = paste("Civilian", " Total Contract Spending", sep = ""))+
+  theme(plot.title = element_text(hjust = 0.5, size = 24, face = "bold"), axis.ticks.x = element_blank()) 
+
+##Save - Change to relevent year span when saving
+
+ggsave(paste("Civilian", " Total Contract Spending Service Product ", "FY09-FY18.jpg", sep = ""), plot_civ,
+       width = 13, height = 6.5, units = "in")
+
+```
+
+When saving, make sure to change the **"FY09-FY18.jpg"** section to reflect the correct year.
