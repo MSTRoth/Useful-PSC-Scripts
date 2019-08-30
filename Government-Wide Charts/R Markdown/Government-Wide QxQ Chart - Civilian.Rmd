@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Civilian Only
 
-Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:\1 Marielle Folder\Data Sets\Government-Wide Data\csv\To Build**
+Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build**
 
 To update the dataset, use the BGov Contracts Intelligence Tool (CIT).  
 
@@ -31,7 +31,7 @@ To update the dataset, use the BGov Contracts Intelligence Tool (CIT).
 Note: Do this once the data is stable, usually around 15 days after the end of the quarter, to obtain the values for the needed quarter for **Contract Obligations (in Billions)** column.  You may have to do this a few times following the end of the quarter to makes sure the numbers have all come in and are relatively stable.  The Civilian (Non-DoD) value should be available, and stable, around 15 days after the end of the desired quarter.  Since DoD is 3 months behind, the DoD number will be available and stable around 3 months and 15 days after the desired quarter.
 
 
-The code is located in the R File **Government-Wide QxQ Chart - Both** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\Government-Wide Charts**
+The code is located in the R File **Government-Wide QxQ Chart - Both** within **X:/1 Marielle Folder/R Scripts/Useful PSC Scripts/Government-Wide Charts**
 
 First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
 ```{r, eval=FALSE}

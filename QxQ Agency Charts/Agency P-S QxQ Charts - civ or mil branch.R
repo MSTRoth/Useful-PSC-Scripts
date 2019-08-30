@@ -1,12 +1,17 @@
 #### Product vs Service - Quarter by Quarter Chart - Civilian or Military Branch####
+library(tidyverse)
+library(RColorBrewer)
+options(scipen=999)
+
+setwd("X:/1 Marielle Folder/Visualizations/Agency Charts/QbyQ charts/Product-Service")
+
 Agency <- "USAID"
 Year <- "FY17-19Q3"
-
+dis_year <- "FY17-19Q3"
 
 data <- read_csv(paste("X:/1 Marielle Folder/Data Sets/By Agency/Quarter by Quarter/", Agency," ", Year,".csv", sep = ""))
-
 dpap <- read_csv("~/Reference Tables/DPAP Crosswalk.csv")
-setwd("X:/1 Marielle Folder/Visualizations/Agency Charts/QbyQ charts/Product-Service")
+
 
 data.organized <- data %>% 
   rename("PSC" = "Product Service Code (PSC) / Federal Supply Code (FSC)",
@@ -36,7 +41,9 @@ plot <-
   ggplot(data.organized, aes(x = FYYear, y = total_obligations, fill = factor(Q_quarter, levels = c("Q4","Q3", "Q2","Q1")))) +
   geom_bar(stat = "identity", color = "Black") +
   geom_text(data = subset(data.organized, total_obligations>(max(data.organized$label_y)/30)), aes(label = round(total_obligations, digits = 2), y = label_y), size = 4, vjust = 1.5, fontface = "bold")+
-  geom_text(data = subset(data.organized, FY != 2019 & total_obligations >(max(data.organized$label_y)/15)), aes(label = sprintf('%.0f%%', prop), 
+  geom_text(data = subset(data.organized, 
+                          FY != 2019 & 
+                            total_obligations >(max(data.organized$label_y)/15)), aes(label = sprintf('%.0f%%', prop), 
                                                                                                                  y = label_y), size = 4, vjust = 3, fontface = "bold", check_overlap = T)+
   stat_summary(fun.y = sum, aes(label = ..y.., group = FY),
                geom = "text", vjust = -.5, size = sum(4,1), fontface = "bold")+   ####Adds total to top
@@ -44,11 +51,8 @@ plot <-
   facet_wrap(~`P.S`, labeller = label_wrap_gen(20)#, scales = "free"
   )+
   labs(y = "Contract Obligations (in) Billions",                                            ##Change based on $$ division
-       title = paste(Agency, " Contract Obligations Comparison - ", Year, sep = ""),                   ##Change based on Agency and year/quarter
+       title = paste(Agency, " Contract Obligations Comparison - ", dis_year, sep = ""),                   ##Change based on Agency and year/quarter
        caption = "Data Source: Bloomberg Government") +                                     ##Can change or remove caption
-  # theme(plot.title = element_text(hjust = 0.5, vjust = 3, size = 24, face = "bold"),
-  #       plot.subtitle = element_text(hjust = 0.5, size = 18, face = "bold"), axis.ticks.x = element_blank(),
-  #       strip.text = element_text(face = "bold"), axis.title.x = element_blank())
   theme(plot.title = element_text(hjust = 0.5, vjust = 3, size = 24, face = "bold"), 
         plot.subtitle = element_text(hjust = 0.5, size = 18, face = "bold"),
         plot.caption = element_text(size = 8, face = "italic"),
@@ -59,5 +63,5 @@ plot <-
 
 plot
 
-ggsave(filename = paste(Agency," Contract Obligations ", Year, "by quarter - P-S.jpg", sep = ""), plot,          ##Change Based on Agency and year/quarter
+ggsave(filename = paste(Agency," Contract Obligations ", dis_year, "by quarter - P-S.jpg", sep = ""), plot,          ##Change Based on Agency and year/quarter
        width = 13, height = 6.5, units = "in")

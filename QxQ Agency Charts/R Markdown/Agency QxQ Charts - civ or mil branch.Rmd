@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This script will produce the quarter by quarter stacked bar chart for Civilian Agencies/Departments or Military Branches.  It won't work for DoD because the data pull is too big to download from BGOV.  See the **Agency Charts - QxQ - DoD** markdown file for creating the DoD quarter by quarter chart.
 
-The files needed for these are saved in **X:\1 Marielle Folder\Data Sets\By Agency\Quarter by Quarter**.  If you need to pull an additional fiscal quarter of data, use BGOV:
+The files needed for these are saved in **X:/1 Marielle Folder/Data Sets/By Agency/Quarter by Quarter**.  If you need to pull an additional fiscal quarter of data, use BGOV:
 
 + Open the Contracts Intelliegence Tool
 + Click **+ More Fields**
@@ -23,13 +23,13 @@ The files needed for these are saved in **X:\1 Marielle Folder\Data Sets\By Agen
 + Scroll down to where it says **Transaction Signed Date** to specify for which quarter you want values
 + Click Download and select Download All
 + When the file finishes downloading open file, click the enable editing button, and click the tab at the bottom maked Data Sheet
-+ Copy and paste the full dataset, except the first row (with the headings), into the correct dataset in **X:\1 Marielle Folder\Data Sets\By Agency\Quarter by Quarter** and rename it to reflect the correct dates
++ Copy and paste the full dataset, except the first row (with the headings), into the correct dataset in **X:/1 Marielle Folder/Data Sets/By Agency/Quarter by Quarter** and rename it to reflect the correct dates
     + If the csv file has become too big for a single csv page, you may have to delete a previous year
     + If the full quarter is too big for BGOV to download, you may have the chunk the data and download it in smaller increments
     + If it's a new file, save using the same form as the other files in the folder, and save as a __CSV (Comma Delimited)__ file
     + You can double check the data after running the script by cross-referencing the values on the chart with those in BGOV (each year should be roughly the same)
 
-After saving and renaming the file, open the script **Agency QxQ Charts - civ or mil branch** located in **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\QxQ Agency Charts**
+After saving and renaming the file, open the script **Agency QxQ Charts - civ or mil branch** located in **X:/1 Marielle Folder/R Scripts/Useful PSC Scripts/QxQ Agency Charts**
 
 First load the necessary packages and identify your location for saving your chart (set the working directory). Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
 
@@ -55,7 +55,6 @@ Note: the **Year** refers to the year range in the file name, exactly as written
 Agency <- "DOJ"
 Year <- "FY17-19Q3"   
 dis_year <- "FY18-19Q3" 
-
 ```
 Make the necessary changes to the above to reflect the **Agency** and **Year** and **dis_year**, all in quotes, and run the code.
 

@@ -39,7 +39,9 @@ data.civdef$civ_def <- c("Defense - Q2", "Civilian - Q3")  ### Change based on q
 plotyr <- ggplot(data.civdef, aes(x = FYYear, y = total_obligations, fill = factor(Quarter, levels = c("Q4","Q3", "Q2","Q1")))) +
   geom_bar(stat = "identity", color = "black") +
   geom_text(aes(label = round(total_obligations, digits = 1), y = label_y), size = 4, vjust = 1.5, fontface = "bold")+
-  geom_text(data = subset(data.civdef, Year != 2019), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
+  geom_text(data = subset(data.civdef
+                          , Year != 2019
+                          ), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
   stat_summary(fun.y = sum, aes(label = ..y.., group = Year),
                geom = "text", vjust = -.5, size = 5, fontface = "bold")+   
   scale_fill_manual(name = "Quarter", values = brewer.pal(9, "YlOrRd")[c(1,3,5,7)])+

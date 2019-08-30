@@ -1,4 +1,8 @@
 #### Product vs Service - Quarter by Quarter Chart - Defense####
+library(tidyverse)
+library(RColorBrewer)
+options(scipen=999)
+
 
 setwd("X:/1 Marielle Folder/Visualizations/Agency Charts/QbyQ charts/Product-Service")
 data <- read_csv("x:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build/Defense Serv-Prod Data by quarter.csv")
@@ -28,16 +32,11 @@ data.civdef <- data %>%
 plot <- ggplot(data.civdef, aes(x = FYYear, y = total_obligations, fill = factor(Quarter, levels = c("Q4","Q3", "Q2","Q1")))) +
   geom_bar(stat = "identity", color = "Black") +
   geom_text(aes(label = round(total_obligations, digits = 1), y = label_y), size = 4, vjust = 1.5, fontface = "bold")+
-  geom_text(data = subset(data.civdef, Year != 2019), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
+  geom_text(data = subset(data.civdef
+                          , Year != 2019
+                          ), aes(label = sprintf('%.0f%%', prop), y = label_y), size = 4, vjust = 3, fontface = "bold")+
   stat_summary(fun.y = sum, aes(label = ..y.., group = Year),
                geom = "text", vjust = -.5, size = 5, fontface = "bold")+   ####Adds total to top
-  #geom_text(aes(color = Quarter == "Q1", label = round(total_obligations, digits = 1), y = label_y), size = 3, vjust = 1.5) +## white on dark
-  # geom_text(data = subset(data.civdef, Year != 2018), aes(color = Quarter == "Q1",
-  #                   label = sprintf('%.0f%%', prop), y = label_y), size = 3, vjust = 3)+ ## white on dark
-  #scale_color_manual(guide = FALSE, values = c("black", "white")) +   ## White on dark
-  # scale_fill_manual(name = NULL, values = c("Q4" = "lightcyan", "Q3" = "lightblue2",
-  #     "Q2" = "skyblue3", "Q1" = "skyblue4")) +
-  #scale_fill_brewer(name = "Quarter", palette = "YlOrRd")+
   scale_fill_manual(name = "Quarter", values = brewer.pal(9, "Blues")[c(1,2,4,6)])+
   facet_grid(~civ_def, labeller = label_wrap_gen(20))+
   labs(x="Fiscal Year", y = "Contract Obligations (in) Billions", 
@@ -52,7 +51,7 @@ plot <- ggplot(data.civdef, aes(x = FYYear, y = total_obligations, fill = factor
         panel.spacing = unit(4, "lines"))
 
 
-
+plot
 
 ggsave("Defense Contract Obligations by Quarter - FY17-FY19 - P-S.jpg", plot,                ######
        width = 13, height = 6.5, units = "in")

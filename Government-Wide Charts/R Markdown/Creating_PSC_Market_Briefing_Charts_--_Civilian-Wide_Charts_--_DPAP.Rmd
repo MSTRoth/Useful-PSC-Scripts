@@ -29,7 +29,7 @@ The DPAP categories are
 
 These cover all the services.  To get **Services** add each category together.  To get **Products** subtract **Services** from the total on BGOV (you can get this by just running all years and the **Total** will be the first line of numbers; to get Civilian total, subtract DoD from the total).  
 
-The code is located in the R File **Government-Wide DPAP Chart - Civilian-Wide** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\Government-Wide Charts**
+The code is located in the R File **Government-Wide DPAP Chart - Civilian-Wide** within **X:/1 Marielle Folder/R Scripts/Useful PSC Scripts/Government-Wide Charts**
 
 First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code): 
 

@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This script will produce the quarter by quarter stacked bar chart for DoD.  DoD required a different script since the file is too large for BGOV to download.  This chart is essentially the same as the government-wide quarter by quarter defense chart, but in the color theme of the agency quarter by quarter charts.
 
-Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:\1 Marielle Folder\Data Sets\Government-Wide Data\csv\To Build**
+Find the file called **Civilian and Defense Data by quarter.csv** in the folder **X:/1 Marielle Folder/Data Sets/Government-Wide Data/csv/To Build**
 
 To update the dataset, use the BGov Contracts Intelligence Tool (CIT).  
 
@@ -30,7 +30,7 @@ To update the dataset, use the BGov Contracts Intelligence Tool (CIT).
 
 Note: Since DoD is 3 months behind, the DoD number will be available and stable around 3 months and 15 days after the desired quarter.
 
-The code is located in the R File **Agency QxQ Chart - DoD** within **X:\1 Marielle Folder\R Scripts\Useful PSC Scripts\QxQ Agency Charts**
+The code is located in the R File **Agency QxQ Chart - DoD** within **X:/1 Marielle Folder/R Scripts/Useful PSC Scripts/QxQ Agency Charts**
 
 First load the necessary packages and identify your location for saving your chart (set the working directory) and read in your saved dataset. Run the following code (*Highlight it* and click __Run__ in the top right corner to execute the highlighted code):
 
